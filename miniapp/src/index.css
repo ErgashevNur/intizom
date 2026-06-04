@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--tg-theme-bg-color, #f9fafb);
+  color: var(--tg-theme-text-color, #111827);
+}
+
+.tg-bg {
+  background-color: var(--tg-theme-bg-color, #f9fafb);
+}
+
+.tg-secondary-bg {
+  background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+}
+
+.tg-text {
+  color: var(--tg-theme-text-color, #111827);
+}
+
+.tg-hint {
+  color: var(--tg-theme-hint-color, #6b7280);
+}
+
+.tg-link {
+  color: var(--tg-theme-link-color, #2563eb);
+}
+
+.tg-button {
+  background-color: var(--tg-theme-button-color, #2563eb);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
