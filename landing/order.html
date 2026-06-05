@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buyurtma berish — INTIZOM</title>
+  <meta name="description" content="INTIZOM daftarini buyurtma bering. 70 000 so'm. Toshkentda yetkazib berish." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body style="background:var(--paper)">
+
+<!-- HEADER -->
+<div class="page-header">
+  <a href="index.html" class="page-header-back">← INTIZOM</a>
+  <h1>Buyurtma berish</h1>
+  <p>Barcha maydonlarni to'ldiring, biz siz bilan bog'lanamiz</p>
+</div>
+
+<!-- FORM -->
+<section class="order-section">
+  <div class="order-form-wrap">
+    <form id="orderForm" novalidate>
+
+      <div class="form-group">
+        <label class="form-label" for="customerName">Ism va familiya <span class="required">*</span></label>
+        <input class="form-input" type="text" id="customerName" name="customerName" placeholder="Abdullayev Jasur" autocomplete="name" />
+        <div class="form-error hidden" id="err-name">Ism va familiyani kiriting</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="customerPhone">Telefon raqam <span class="required">*</span></label>
+        <input class="form-input" type="tel" id="customerPhone" name="customerPhone" placeholder="+998 90 123 45 67" autocomplete="tel" />
+        <div class="form-error hidden" id="err-phone">+998 formatida kiriting (masalan: +998901234567)</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="region">Shahar / Tuman <span class="required">*</span></label>
+        <input class="form-input" type="text" id="region" name="region" placeholder="Toshkent, Chilonzor tumani" autocomplete="address-level2" />
+        <div class="form-error hidden" id="err-region">Shahar yoki tumanni kiriting</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="address">To'liq manzil <span class="required">*</span></label>
+        <textarea class="form-textarea" id="address" name="address" placeholder="Ko'cha, uy, xonadon raqami" autocomplete="street-address"></textarea>
+        <div class="form-error hidden" id="err-address">To'liq manzilni kiriting</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="quantity">Miqdor <span class="required">*</span></label>
+        <select class="form-select" id="quantity" name="quantity">
+          <option value="1">1 ta — 70 000 so'm</option>
+          <option value="2">2 ta — 140 000 so'm</option>
+          <option value="3">3 ta — 210 000 so'm</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">To'lov usuli <span class="required">*</span></label>
+        <div class="payment-options">
+          <div>
+            <input class="payment-option" type="radio" name="paymentMethod" id="pay-naqd" value="naqd" checked />
+            <label class="payment-label" for="pay-naqd">
+              <span class="payment-label-icon">💵</span>
+              Naqd
+              <span style="font-size:0.72rem;opacity:0.7">Yetkazganda</span>
+            </label>
+          </div>
+          <div>
+            <input class="payment-option" type="radio" name="paymentMethod" id="pay-payme" value="payme" />
+            <label class="payment-label" for="pay-payme">
+              <span class="payment-label-icon">💳</span>
+              Payme
+            </label>
+          </div>
+          <div>
+            <input class="payment-option" type="radio" name="paymentMethod" id="pay-click" value="click" />
+            <label class="payment-label" for="pay-click">
+              <span class="payment-label-icon">🔵</span>
+              Click
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="note">Izoh <span style="color:var(--muted);font-weight:400">(ixtiyoriy)</span></label>
+        <textarea class="form-textarea" id="note" name="note" placeholder="Qo'shimcha ma'lumot, yetkazish vaqti va h.k."></textarea>
+      </div>
+
+      <div id="formError" class="login-error hidden"></div>
+
+      <!-- Price summary -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.88rem;color:var(--muted)">Jami to'lov:</span>
+        <span id="totalPrice" style="font-family:'Newsreader',serif;font-size:1.5rem;color:var(--ink)">70 000 so'm</span>
+      </div>
+
+      <button type="submit" class="form-submit" id="submitBtn">
+        <span id="submitText">Buyurtma berish</span>
+        <div class="spinner hidden" id="submitSpinner"></div>
+      </button>
+
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">INTIZOM</div>
+  <div class="footer-links">
+    <a href="https://t.me/intizom_daftar" target="_blank" rel="noopener">Telegram</a>
+    <a href="https://instagram.com/intizom_daftar" target="_blank" rel="noopener">Instagram</a>
+  </div>
+  <div class="footer-copy">© 2025 INTIZOM · muvaffaqiyat kaliti</div>
+</footer>
+
+<script src="config.js"></script>
+<script src="js/order.js"></script>
+</body>
+</html>

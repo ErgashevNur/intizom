@@ -29,4 +29,12 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   productId?: number;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
 }

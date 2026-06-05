@@ -34,6 +34,8 @@ export class OrdersService {
       quantity: dto.quantity,
       totalPrice: product.price * dto.quantity,
       status: OrderStatus.PENDING,
+      paymentMethod: dto.paymentMethod || 'naqd',
+      note: dto.note,
     });
 
     const saved = await this.ordersRepository.save(order);
@@ -85,6 +87,15 @@ export class OrdersService {
     const delivered = await this.ordersRepository.count({ where: { status: OrderStatus.DELIVERED } });
     const cancelled = await this.ordersRepository.count({ where: { status: OrderStatus.CANCELLED } });
 
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    const { MoreThanOrEqual } = await import('typeorm');
+    const today = await this.ordersRepository.count({ where: { createdAt: MoreThanOrEqual(todayStart) } });
+    const week = await this.ordersRepository.count({ where: { createdAt: MoreThanOrEqual(weekStart) } });
+
     const revenueResult = await this.ordersRepository
       .createQueryBuilder('order')
       .select('SUM(order.totalPrice)', 'total')
@@ -93,14 +104,19 @@ export class OrdersService {
       })
       .getRawOne();
 
+    const totalRevenue = parseInt(revenueResult?.total || '0', 10);
+
     return {
       total,
+      today,
+      week,
       pending,
       confirmed,
       shipped,
       delivered,
       cancelled,
-      revenue: parseInt(revenueResult?.total || '0', 10),
+      revenue: totalRevenue,
+      totalRevenue,
     };
   }
 }
