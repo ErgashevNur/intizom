@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — INTIZOM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="admin-login" id="loginScreen">
+  <div class="login-box">
+    <div style="margin-bottom:1.5rem">
+      <svg style="width:48px;height:48px;color:var(--accent)" viewBox="0 0 168 168" aria-hidden="true">
+        <circle cx="84" cy="84" r="80" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <circle cx="84" cy="84" r="64" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+        <circle cx="84" cy="70" r="14" fill="currentColor"/>
+        <polygon points="75,82 93,82 97,120 71,120" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1 class="login-title">INTIZOM</h1>
+    <p class="login-sub">Admin panel</p>
+    <div class="login-error hidden" id="loginError"></div>
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="loginUsername">Foydalanuvchi nomi</label>
+        <input class="form-input" type="text" id="loginUsername" autocomplete="username" placeholder="admin" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Parol</label>
+        <input class="form-input" type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="form-submit" id="loginBtn">
+        <span id="loginText">Kirish</span>
+        <div class="spinner hidden" id="loginSpinner"></div>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-page hidden" id="adminPanel">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">INTIZOM</div>
+    <button class="admin-nav-item active" id="navDashboard" onclick="showSection('dashboard')">
+      📊 Dashboard
+    </button>
+    <button class="admin-nav-item" id="navOrders" onclick="showSection('orders')">
+      📦 Buyurtmalar
+    </button>
+    <div style="flex:1"></div>
+    <button class="admin-nav-item" onclick="doLogout()">
+      🚪 Chiqish
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1 id="sectionTitle">Dashboard</h1>
+      <button class="admin-logout" onclick="doLogout()">Chiqish</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="sectionDashboard">
+      <div class="stat-cards" id="statCards">
+        <div class="stat-card">
+          <div class="stat-label">Bugungi buyurtmalar</div>
+          <div class="stat-value" id="statToday">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Haftalik</div>
+          <div class="stat-value" id="statWeek">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Jami buyurtmalar</div>
+          <div class="stat-value" id="statTotal">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Jami tushum</div>
+          <div class="stat-value" id="statRevenue">—</div>
+          <div class="stat-sub">so'm</div>
+        </div>
+      </div>
+
+      <!-- Recent orders on dashboard -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <span class="admin-section-title">So'nggi buyurtmalar</span>
+          <button onclick="showSection('orders')" style="font-size:0.82rem;color:var(--accent);background:none;border:none;cursor:pointer">Hammasini ko'rish →</button>
+        </div>
+        <div id="recentOrdersContainer">
+          <div style="padding:3rem;text-align:center;color:var(--muted)">Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="sectionOrders" class="hidden">
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <span class="admin-section-title">Barcha buyurtmalar</span>
+          <div style="display:flex;gap:0.75rem;align-items:center">
+            <select class="status-filter" id="statusFilter" onchange="loadOrders()">
+              <option value="">Barchasi</option>
+              <option value="pending">Yangi</option>
+              <option value="confirmed">Qabul qilindi</option>
+              <option value="shipped">Yetkazilmoqda</option>
+              <option value="delivered">Yetkazildi</option>
+              <option value="cancelled">Bekor qilindi</option>
+            </select>
+            <button onclick="exportCSV()" style="font-size:0.82rem;padding:0.4rem 0.8rem;border:1px solid var(--border);border-radius:1rem;background:none;cursor:pointer;color:var(--muted)">⬇ Export</button>
+          </div>
+        </div>
+        <div id="ordersContainer">
+          <div style="padding:3rem;text-align:center;color:var(--muted)">Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

@@ -62,6 +62,12 @@ export class Order {
   @Column({ nullable: true, type: 'text' })
   adminNote: string;
 
+  @Column({ nullable: true })
+  paymentMethod: string;
+
+  @Column({ nullable: true, type: 'text' })
+  note: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

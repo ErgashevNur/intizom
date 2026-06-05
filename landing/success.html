@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buyurtma qabul qilindi — INTIZOM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<main class="success-page">
+  <div class="success-icon" aria-hidden="true">✅</div>
+  <h1 class="success-title">Buyurtma qabul qilindi!</h1>
+  <p class="success-body">
+    Rahmat! Sizning buyurtmangiz muvaffaqiyatli qabul qilindi.<br>
+    Tez orada operatorimiz siz bilan bog'lanadi va yetkazib berish vaqtini tasdiqlaydi.
+  </p>
+
+  <div class="success-order" id="orderInfo" style="display:none">
+    <div class="success-order-label">Buyurtma raqami</div>
+    <div class="success-order-num" id="orderNumber">#001</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;margin-bottom:2rem">
+    <a href="https://t.me/intizom_daftar" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,253,249,0.08);color:rgba(255,253,249,0.7);border:1px solid rgba(255,253,249,0.12);border-radius:2rem;padding:0.75rem 1.5rem;text-decoration:none;font-size:0.9rem;transition:background 0.2s">
+      📲 Telegram kanalimizga qo'shiling
+    </a>
+  </div>
+
+  <a href="index.html" class="success-back">← Bosh sahifaga qaytish</a>
+</main>
+
+<script>
+  const num = sessionStorage.getItem('orderNumber');
+  if (num) {
+    document.getElementById('orderNumber').textContent = num;
+    document.getElementById('orderInfo').style.display = 'block';
+    sessionStorage.removeItem('orderNumber');
+  }
+</script>
+</body>
+</html>
