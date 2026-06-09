@@ -29,4 +29,12 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   productId?: number;
+
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
+
+  @IsOptional()
+  @IsNumber()
+  discountAmount?: number;
 }

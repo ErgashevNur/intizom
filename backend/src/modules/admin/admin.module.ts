@@ -6,6 +6,7 @@ import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { OrdersModule } from '../orders/orders.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { OrdersModule } from '../orders/orders.module';
       }),
     }),
     OrdersModule,
+    NotificationsModule,
   ],
   providers: [AdminService, JwtStrategy],
   controllers: [AdminController],

@@ -1,18 +1,12 @@
-import {
-  Action,
-  Command,
-  Ctx,
-  InjectBot,
-  On,
-  Start,
-  Update,
-} from 'nestjs-telegraf';
+import { Action, Command, Ctx, InjectBot, On, Start, Update } from 'nestjs-telegraf';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
 import { Context } from 'telegraf';
 import { OrdersService } from '../orders/orders.service';
 import { UsersService } from '../users/users.service';
+import { PromoService } from '../promo/promo.service';
+import { DiscountType } from '../promo/entities/promo-code.entity';
 import { ORDER_WIZARD_ID, STATUS_LABELS } from './telegram.constants';
 import {
   aboutKeyboard,
@@ -30,6 +24,7 @@ export class TelegramUpdate {
     private readonly configService: ConfigService,
     private readonly ordersService: OrdersService,
     private readonly usersService: UsersService,
+    private readonly promoService: PromoService,
   ) {}
 
   private get adminIds(): number[] {
@@ -40,22 +35,21 @@ export class TelegramUpdate {
     return this.configService.get<string>('telegram.miniAppUrl') || '';
   }
 
-  private isAdmin(userId: number): boolean {
-    return this.adminIds.includes(userId);
+  private isAdmin(id: number) {
+    return this.adminIds.includes(id);
   }
 
   @Start()
   async onStart(@Ctx() ctx: Context) {
     await this.usersService.findOrCreate(ctx.from);
-
-    const name = ctx.from.first_name || 'Foydalanuvchi';
+    const name = ctx.from.first_name || 'Mehmon';
 
     await ctx.replyWithHTML(
-      `Salom, <b>${name}</b>! 👋\n\n` +
-      `📔 <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
-      `Har bir sahifa sizni intizomga, har bir kun esa maqsadingizga bir qadam yaqinlashtiradi.\n\n` +
-      `<i>"Intizom — bu kayfiyatga qarab emas, qarorga qarab yashash."</i>\n\n` +
-      `Nima qilmoqchisiz?`,
+      `Salom, <b>${name}</b>!\n\n` +
+      `📔  <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
+      `Narxi: <b>49 000 so'm</b>\n` +
+      `Yetkazish: Butun O'zbekiston\n` +
+      `To'lov: Naqd, yetkazib berganda`,
       mainKeyboard(this.miniAppUrl),
     );
   }
@@ -69,24 +63,19 @@ export class TelegramUpdate {
   async onAbout(@Ctx() ctx: Context) {
     await ctx.answerCbQuery();
     await ctx.editMessageText(
-      `📔 <b>INTIZOM Daftar haqida</b>\n\n` +
-      `INTIZOM — bu oddiy bloknot emas, balki maqsadga erishish va ` +
-      `kundalik hayotni tartiblash uchun mo'ljallangan tizimli daftar.\n\n` +
-      `<b>Daftar sizga nima beradi?</b>\n` +
-      `✅ Oylik maqsad qo'yish va kuzatish\n` +
-      `✅ Kunlik reja (Eyzenxauer matritsasi)\n` +
-      `✅ Odat trekeri — zanjirni uzmaslik\n` +
-      `✅ Yomon odatdan voz kechish (sabab insho)\n` +
-      `✅ G'oyalarni saqlash\n` +
-      `✅ Oy oxiri "avval/keyin" tahlili\n\n` +
-      `<b>Asosiy metodologiyalar:</b>\n` +
-      `📚 Atomic Habits\n` +
-      `🎯 Start With Why\n` +
-      `⚡ Eyzenxauer matritsasi\n` +
-      `⚖️ Hayot sohalari muvozanati\n\n` +
-      `💰 <b>Narxi: 49,000 so'm</b>\n` +
-      `📦 Yetkazib berish: Butun O'zbekiston\n` +
-      `💵 To'lov: Naqd, yetkazib berganda`,
+      `📔  <b>INTIZOM daftar</b>\n\n` +
+      `Dunyodagi eng kuchli produktivlik metodlari asosida tuzilgan:\n\n` +
+      `  · Atomic Habits — odat shakllantirish\n` +
+      `  · Start With Why — maqsad sababi\n` +
+      `  · Eyzenxauer matritsasi — kunlik tartib\n` +
+      `  · Hayot sohalari balansi\n\n` +
+      `Bir oyda nima o'zgaradi:\n` +
+      `  ✓ Aniq oylik maqsad\n` +
+      `  ✓ Kundalik reja va eng muhim ish\n` +
+      `  ✓ Odat trekeri\n` +
+      `  ✓ G'oyalar daftari\n` +
+      `  ✓ Oy oxiri natija tahlili\n\n` +
+      `<b>49 000 so'm</b>  ·  Naqd, yetkazib berganda`,
       { parse_mode: 'HTML', reply_markup: aboutKeyboard().reply_markup },
     );
   }
@@ -95,9 +84,8 @@ export class TelegramUpdate {
   async onBackMain(@Ctx() ctx: Context) {
     await ctx.answerCbQuery();
     await ctx.editMessageText(
-      `📔 <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
-      `<i>"Intizom — bu kayfiyatga qarab emas, qarorga qarab yashash."</i>\n\n` +
-      `Nima qilmoqchisiz?`,
+      `📔  <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
+      `Narxi: <b>49 000 so'm</b>  ·  Naqd, yetkazib berganda`,
       { parse_mode: 'HTML', reply_markup: mainKeyboard(this.miniAppUrl).reply_markup },
     );
   }
@@ -110,94 +98,153 @@ export class TelegramUpdate {
 
   @Command('admin')
   async onAdmin(@Ctx() ctx: Context) {
-    if (!this.isAdmin(ctx.from.id)) {
-      await ctx.reply('❌ Ruxsat yo\'q.');
-      return;
-    }
-    await ctx.replyWithHTML(
-      '🔐 <b>Admin panel</b>\n\nNimani ko\'rmoqchisiz?',
-      adminMenuKeyboard(),
-    );
+    if (!this.isAdmin(ctx.from.id)) return;
+    await ctx.replyWithHTML('<b>Admin panel</b>', adminMenuKeyboard());
   }
 
   @Action('admin_pending_orders')
-  async onAdminPendingOrders(@Ctx() ctx: Context) {
-    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery('Ruxsat yo\'q');
+  async onAdminPending(@Ctx() ctx: Context) {
+    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
 
     const orders = await this.ordersService.findAll(OrderStatus.PENDING);
-    if (orders.length === 0) {
-      await ctx.reply('📭 Yangi buyurtmalar yo\'q.');
-      return;
-    }
+    if (!orders.length) { await ctx.reply('Yangi buyurtmalar yo\'q.'); return; }
 
-    for (const order of orders.slice(0, 10)) {
-      const text =
-        `📋 <b>${order.orderNumber}</b>\n` +
-        `👤 ${order.customerName}\n` +
-        `📞 ${order.customerPhone}\n` +
-        `🗺️ ${order.region} — ${order.address}\n` +
-        `📦 ${order.quantity} ta × ${(order.totalPrice / order.quantity).toLocaleString()} = ` +
-        `<b>${order.totalPrice.toLocaleString()} so'm</b>\n` +
-        `🕐 ${new Date(order.createdAt).toLocaleString('uz-UZ')}`;
-
-      await ctx.replyWithHTML(text, adminOrderKeyboard(order.id, order.status));
+    for (const o of orders.slice(0, 10)) {
+      await ctx.replyWithHTML(
+        `<b>${o.orderNumber}</b>\n` +
+        `${o.customerName}  ·  ${o.customerPhone}\n` +
+        `${o.region}, ${o.address}\n` +
+        `${o.quantity} ta  ·  <b>${o.totalPrice.toLocaleString()} so'm</b>`,
+        adminOrderKeyboard(o.id, o.status),
+      );
     }
   }
 
   @Action('admin_all_orders')
-  async onAdminAllOrders(@Ctx() ctx: Context) {
-    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery('Ruxsat yo\'q');
+  async onAdminAll(@Ctx() ctx: Context) {
+    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
 
     const orders = await this.ordersService.findAll();
-    if (orders.length === 0) {
-      await ctx.reply('📭 Hali buyurtmalar yo\'q.');
-      return;
-    }
+    if (!orders.length) { await ctx.reply('Buyurtmalar yo\'q.'); return; }
 
     const lines = orders.slice(0, 20).map(
-      (o) =>
-        `${STATUS_LABELS[o.status] || o.status} <b>${o.orderNumber}</b> — ${o.customerName} — ${o.totalPrice.toLocaleString()} so'm`,
+      (o) => `${STATUS_LABELS[o.status]}  <b>${o.orderNumber}</b>  ${o.customerName}`,
     );
-
-    await ctx.replyWithHTML(
-      `📊 <b>So'nggi buyurtmalar (${orders.length} ta):</b>\n\n` + lines.join('\n'),
-    );
+    await ctx.replyWithHTML(`<b>Buyurtmalar</b> (${orders.length})\n\n` + lines.join('\n'));
   }
 
   @Action('admin_stats')
   async onAdminStats(@Ctx() ctx: Context) {
-    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery('Ruxsat yo\'q');
+    if (!this.isAdmin(ctx.from.id)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
 
     const stats = await this.ordersService.getStats();
-    const usersCount = await this.usersService.count();
+    const users = await this.usersService.count();
 
     await ctx.replyWithHTML(
-      `📈 <b>Statistika</b>\n\n` +
-      `👥 Foydalanuvchilar: <b>${usersCount}</b>\n\n` +
-      `📦 Buyurtmalar:\n` +
-      `🟡 Kutilmoqda: <b>${stats.pending}</b>\n` +
-      `🟢 Tasdiqlangan: <b>${stats.confirmed}</b>\n` +
-      `🚚 Yuborilgan: <b>${stats.shipped}</b>\n` +
-      `✅ Yetkazilgan: <b>${stats.delivered}</b>\n` +
-      `❌ Bekor qilingan: <b>${stats.cancelled}</b>\n` +
-      `📊 Jami: <b>${stats.total}</b>\n\n` +
-      `💰 Daromad (tasdiqlangan+): <b>${stats.revenue.toLocaleString()} so'm</b>`,
+      `<b>Statistika</b>\n\n` +
+      `Foydalanuvchilar: <b>${users}</b>\n\n` +
+      `Kutilmoqda: <b>${stats.pending}</b>\n` +
+      `Tasdiqlangan: <b>${stats.confirmed}</b>\n` +
+      `Yo'lda: <b>${stats.shipped}</b>\n` +
+      `Yetkazilgan: <b>${stats.delivered}</b>\n` +
+      `Bekor: <b>${stats.cancelled}</b>\n` +
+      `Jami: <b>${stats.total}</b>\n\n` +
+      `Daromad: <b>${stats.revenue.toLocaleString()} so'm</b>`,
     );
   }
 
+  // /addpromo KOD FOIZ|MIQDOR [max_uses] — masalan: /addpromo SALE20 20 100
+  @Command('addpromo')
+  async onAddPromo(@Ctx() ctx: Context) {
+    if (!this.isAdmin(ctx.from.id)) return;
+    const text = (ctx.message as any)?.text as string;
+    const parts = text.split(/\s+/).slice(1);
+    if (parts.length < 2) {
+      await ctx.replyWithHTML(
+        `<b>Foydalanish:</b>\n` +
+        `/addpromo KOD QIYMAT [max_uses]\n\n` +
+        `QIYMAT: foiz (masalan <code>20</code>) yoki so'm (masalan <code>10000s</code>)\n` +
+        `Misol: <code>/addpromo SALE20 20 100</code>\n` +
+        `Misol: <code>/addpromo VIP5000 5000s</code>`,
+      );
+      return;
+    }
+
+    const code = parts[0].toUpperCase();
+    const valueStr = parts[1];
+    const maxUses = parts[2] ? parseInt(parts[2], 10) : null;
+
+    const isFixed = valueStr.endsWith('s') || valueStr.endsWith('S');
+    const value = parseInt(valueStr.replace(/[sS]$/, ''), 10);
+
+    if (isNaN(value) || value <= 0) {
+      await ctx.reply('Noto\'g\'ri qiymat. Foiz yoki so\'m kiriting (masalan: 20 yoki 5000s)');
+      return;
+    }
+
+    try {
+      const promo = await this.promoService.create({
+        code,
+        discountType: isFixed ? DiscountType.FIXED : DiscountType.PERCENT,
+        discountValue: value,
+        maxUses: isNaN(maxUses) ? null : maxUses,
+      });
+
+      const typeLabel = isFixed ? `${value.toLocaleString()} so'm` : `${value}%`;
+      await ctx.replyWithHTML(
+        `✅ Promokod yaratildi!\n\n` +
+        `Kod: <code>${promo.code}</code>\n` +
+        `Chegirma: <b>${typeLabel}</b>\n` +
+        `Limit: ${maxUses ? maxUses + ' ta' : 'cheksiz'}`,
+      );
+    } catch {
+      await ctx.reply('Xatolik: bu kod allaqachon mavjud bo\'lishi mumkin.');
+    }
+  }
+
+  @Command('promos')
+  async onPromos(@Ctx() ctx: Context) {
+    if (!this.isAdmin(ctx.from.id)) return;
+    const promos = await this.promoService.findAll();
+    if (!promos.length) { await ctx.reply('Promokodlar yo\'q.'); return; }
+
+    const lines = promos.map((p) => {
+      const typeLabel = p.discountType === DiscountType.FIXED
+        ? `${p.discountValue.toLocaleString()} so'm`
+        : `${p.discountValue}%`;
+      const status = p.isActive ? '✅' : '❌';
+      const uses = p.maxUses ? `${p.usedCount}/${p.maxUses}` : `${p.usedCount}/∞`;
+      return `${status} <code>${p.code}</code>  ${typeLabel}  [${uses}]`;
+    });
+
+    await ctx.replyWithHTML(`<b>Promokodlar</b>\n\n` + lines.join('\n'));
+  }
+
+  @Command('delpromo')
+  async onDelPromo(@Ctx() ctx: Context) {
+    if (!this.isAdmin(ctx.from.id)) return;
+    const text = (ctx.message as any)?.text as string;
+    const code = text.split(/\s+/)[1]?.toUpperCase();
+    if (!code) { await ctx.reply('Foydalanish: /delpromo KOD'); return; }
+
+    const promos = await this.promoService.findAll();
+    const promo = promos.find((p) => p.code === code);
+    if (!promo) { await ctx.reply(`"${code}" promokod topilmadi.`); return; }
+
+    await this.promoService.delete(promo.id);
+    await ctx.reply(`"${code}" o'chirildi.`);
+  }
+
   @Action(/^admin_(confirm|cancel|ship|deliver)_(\d+)$/)
-  async onAdminOrderAction(@Ctx() ctx: Context) {
+  async onAdminAction(@Ctx() ctx: Context) {
     if (!this.isAdmin(ctx.from.id)) return;
 
     const data = (ctx as any).callbackQuery?.data as string;
     const match = data.match(/^admin_(confirm|cancel|ship|deliver)_(\d+)$/);
     if (!match) return;
-
-    const [, action, idStr] = match;
-    const orderId = parseInt(idStr, 10);
 
     const statusMap: Record<string, OrderStatus> = {
       confirm: OrderStatus.CONFIRMED,
@@ -206,60 +253,39 @@ export class TelegramUpdate {
       deliver: OrderStatus.DELIVERED,
     };
 
-    const newStatus = statusMap[action];
-    const order = await this.ordersService.updateStatus(orderId, newStatus);
+    const order = await this.ordersService.updateStatus(
+      parseInt(match[2], 10),
+      statusMap[match[1]],
+    );
 
-    await ctx.answerCbQuery(`✅ Status o'zgartirildi: ${STATUS_LABELS[newStatus]}`);
+    await ctx.answerCbQuery(`${STATUS_LABELS[order.status]}`);
+    await ctx.editMessageText(
+      `<b>${order.orderNumber}</b>  ·  ${STATUS_LABELS[order.status]}\n` +
+      `${order.customerName}  ·  ${order.customerPhone}`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: adminOrderKeyboard(order.id, order.status).reply_markup,
+      },
+    );
 
-    const text =
-      `📋 <b>${order.orderNumber}</b> — ${STATUS_LABELS[newStatus]}\n` +
-      `👤 ${order.customerName}\n` +
-      `📞 ${order.customerPhone}`;
-
-    await ctx.editMessageText(text, {
-      parse_mode: 'HTML',
-      reply_markup: adminOrderKeyboard(order.id, order.status).reply_markup,
-    });
-
-    // Notify customer if they used the bot
+    // Mijozga xabar yuborish
     if (order.telegramId) {
-      try {
-        const customerMsg = this.getCustomerStatusMessage(order.orderNumber, newStatus);
-        await this.bot.telegram.sendMessage(order.telegramId, customerMsg, { parse_mode: 'HTML' });
-      } catch {
-        // Customer may have blocked the bot
+      const msgs: Partial<Record<OrderStatus, string>> = {
+        [OrderStatus.CONFIRMED]:
+          `✓ <b>Buyurtmangiz tasdiqlandi</b>\n\nRaqam: <code>${order.orderNumber}</code>\n\nQadoqlanmoqda, tez orada kuryer bog'lanadi.`,
+        [OrderStatus.SHIPPED]:
+          `<b>Buyurtmangiz yo'lda!</b>\n\nRaqam: <code>${order.orderNumber}</code>\n\nKuryer tez orada siz bilan bog'lanadi.\nTo'lov — naqd pul, yetkazib berganda.`,
+        [OrderStatus.DELIVERED]:
+          `✓ <b>Buyurtmangiz yetkazildi!</b>\n\nRaqam: <code>${order.orderNumber}</code>\n\nINTIZOM daftarni yoqtirishingizni umid qilamiz. 📔`,
+        [OrderStatus.CANCELLED]:
+          `<b>Buyurtmangiz bekor qilindi.</b>\n\nRaqam: <code>${order.orderNumber}</code>\n\nSavollar bo'lsa, bot orqali murojaat qiling.`,
+      };
+      const msg = msgs[order.status];
+      if (msg) {
+        try {
+          await this.bot.telegram.sendMessage(order.telegramId, msg, { parse_mode: 'HTML' });
+        } catch {}
       }
     }
-  }
-
-  async notifyAdmins(orderNumber: string, customerName: string, phone: string, region: string, address: string, quantity: number, totalPrice: number, orderId: number) {
-    const text =
-      `🔔 <b>Yangi buyurtma!</b>\n\n` +
-      `📋 <b>${orderNumber}</b>\n` +
-      `👤 ${customerName}\n` +
-      `📞 ${phone}\n` +
-      `🗺️ ${region} — ${address}\n` +
-      `📦 ${quantity} ta — <b>${totalPrice.toLocaleString()} so'm</b>`;
-
-    for (const adminId of this.adminIds) {
-      try {
-        await this.bot.telegram.sendMessage(adminId, text, {
-          parse_mode: 'HTML',
-          reply_markup: adminOrderKeyboard(orderId, 'pending').reply_markup,
-        });
-      } catch {
-        // Admin may not have started the bot
-      }
-    }
-  }
-
-  private getCustomerStatusMessage(orderNumber: string, status: OrderStatus): string {
-    const messages: Partial<Record<OrderStatus, string>> = {
-      [OrderStatus.CONFIRMED]: `✅ <b>Buyurtmangiz tasdiqlandi!</b>\n\n📋 ${orderNumber}\n\nTez orada yetkazib beriladi.`,
-      [OrderStatus.SHIPPED]: `🚚 <b>Buyurtmangiz yo'lda!</b>\n\n📋 ${orderNumber}\n\nKuryer siz bilan bog'lanadi.`,
-      [OrderStatus.DELIVERED]: `🎉 <b>Buyurtmangiz yetkazildi!</b>\n\n📋 ${orderNumber}\n\nINTIZOM daftarni yoqtirishingizni umid qilamiz! 📔`,
-      [OrderStatus.CANCELLED]: `❌ <b>Buyurtmangiz bekor qilindi.</b>\n\n📋 ${orderNumber}\n\nSavollar bo'lsa, bot orqali murojaat qiling.`,
-    };
-    return messages[status] || `📋 ${orderNumber} buyurtmangiz holati yangilandi: ${STATUS_LABELS[status]}`;
   }
 }

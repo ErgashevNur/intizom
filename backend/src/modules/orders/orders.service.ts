@@ -23,6 +23,9 @@ export class OrdersService {
     const orderCount = await this.ordersRepository.count();
     const orderNumber = `INT-${String(orderCount + 1).padStart(6, '0')}`;
 
+    const basePrice = product.price * dto.quantity;
+    const discount = dto.discountAmount ?? 0;
+
     const order = this.ordersRepository.create({
       orderNumber,
       telegramId: dto.telegramId,
@@ -32,7 +35,9 @@ export class OrdersService {
       region: dto.region,
       address: dto.address,
       quantity: dto.quantity,
-      totalPrice: product.price * dto.quantity,
+      totalPrice: basePrice - discount,
+      promoCode: dto.promoCode ?? null,
+      discountAmount: discount > 0 ? discount : null,
       status: OrderStatus.PENDING,
     });
 

@@ -1,30 +1,61 @@
-version: '3.8'
-
 services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: intizom-postgres
     environment:
-      POSTGRES_USER: ${DB_USER:-intizom}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-intizom123}
-      POSTGRES_DB: ${DB_NAME:-intizom}
-    ports:
-      - '5432:5432'
+      POSTGRES_USER:     ${DB_USER:-intizom}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       ${DB_NAME:-intizom}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-intizom} -d ${DB_NAME:-intizom}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
+  # ── Backend (NestJS) ──────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: intizom-backend
     env_file: .env
-    ports:
-      - '3000:3000'
+    environment:
+      DB_HOST: postgres        # override .env — service name inside Docker
+      DB_SYNC: "false"         # never auto-sync in production
+      NODE_ENV: production
+    networks:
+      - internal
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+
+  # ── Mini App (React + Nginx) ──────────────────────────────────────
+  miniapp:
+    build:
+      context: ./miniapp
+      dockerfile: Dockerfile
+    container_name: intizom-miniapp
+    ports:
+      - "80:80"
+    networks:
+      - internal
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  internal:
+    driver: bridge
 
 volumes:
   postgres_data:

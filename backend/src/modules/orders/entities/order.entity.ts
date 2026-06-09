@@ -28,7 +28,7 @@ export class Order {
   @ManyToOne(() => User, (user) => user.orders, { nullable: true })
   user: User;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   telegramId: number;
 
   @ManyToOne(() => Product, (product) => product.orders)
@@ -51,6 +51,12 @@ export class Order {
 
   @Column({ type: 'int' })
   totalPrice: number;
+
+  @Column({ nullable: true, type: 'varchar' })
+  promoCode: string | null;
+
+  @Column({ nullable: true, type: 'int' })
+  discountAmount: number | null;
 
   @Column({
     type: 'enum',

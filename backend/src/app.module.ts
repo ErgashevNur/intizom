@@ -10,6 +10,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { OrderWizard } from './modules/telegram/scenes/order.wizard';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PromoModule } from './modules/promo/promo.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { OrderWizard } from './modules/telegram/scenes/order.wizard';
     OrdersModule,
     TelegramModule,
     AdminModule,
+    NotificationsModule,
+    PromoModule,
   ],
 })
 export class AppModule {}

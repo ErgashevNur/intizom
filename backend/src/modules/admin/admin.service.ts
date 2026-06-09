@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { OrdersService } from '../orders/orders.service';
 import { OrderStatus } from '../orders/entities/order.entity';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -15,6 +16,7 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly ordersService: OrdersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -44,7 +46,9 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async updateOrderStatus(id: number, dto: UpdateOrderStatusDto) {
-    return this.ordersService.updateStatus(id, dto.status, dto.adminNote);
+    const updated = await this.ordersService.updateStatus(id, dto.status, dto.adminNote);
+    await this.notificationsService.notifyCustomerStatusChange(updated);
+    return updated;
   }
 
   async getStats() {
