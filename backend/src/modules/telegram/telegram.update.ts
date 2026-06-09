@@ -6,6 +6,7 @@ import { Context } from 'telegraf';
 import { OrdersService } from '../orders/orders.service';
 import { UsersService } from '../users/users.service';
 import { PromoService } from '../promo/promo.service';
+import { ProductsService } from '../products/products.service';
 import { DiscountType } from '../promo/entities/promo-code.entity';
 import { ORDER_WIZARD_ID, STATUS_LABELS } from './telegram.constants';
 import {
@@ -25,6 +26,7 @@ export class TelegramUpdate {
     private readonly ordersService: OrdersService,
     private readonly usersService: UsersService,
     private readonly promoService: PromoService,
+    private readonly productsService: ProductsService,
   ) {}
 
   private get adminIds(): number[] {
@@ -43,11 +45,13 @@ export class TelegramUpdate {
   async onStart(@Ctx() ctx: Context) {
     await this.usersService.findOrCreate(ctx.from);
     const name = ctx.from.first_name || 'Mehmon';
+    const product = await this.productsService.findMain();
+    const price = product?.price ?? 49000;
 
     await ctx.replyWithHTML(
       `Salom, <b>${name}</b>!\n\n` +
       `📔  <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
-      `Narxi: <b>49 000 so'm</b>\n` +
+      `Narxi: <b>${price.toLocaleString()} so'm</b>\n` +
       `Yetkazish: Butun O'zbekiston\n` +
       `To'lov: Naqd, yetkazib berganda`,
       mainKeyboard(this.miniAppUrl),

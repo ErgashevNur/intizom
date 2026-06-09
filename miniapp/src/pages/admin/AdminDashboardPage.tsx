@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp, Package, CheckCircle2, Clock,
-  ChevronRight, Truck, ArrowUpRight
+  ChevronRight, Truck, ArrowUpRight, Tag, Check, X
 } from 'lucide-react';
-import { adminGetOrders, adminGetStats } from '../../api';
+import { adminGetOrders, adminGetStats, adminGetProduct, adminUpdateProductPrice } from '../../api';
 import { Order, Stats, STATUS_COLORS, STATUS_LABELS } from '../../types';
 import AdminLayout from './AdminLayout';
 
@@ -13,13 +13,41 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [priceInput, setPriceInput] = useState('');
+  const [editingPrice, setEditingPrice] = useState(false);
+  const [savingPrice, setSavingPrice] = useState(false);
+  const [priceError, setPriceError] = useState('');
 
   useEffect(() => {
-    Promise.all([adminGetStats(), adminGetOrders()])
-      .then(([s, orders]) => { setStats(s); setRecentOrders(orders.slice(0, 8)); })
+    Promise.all([adminGetStats(), adminGetOrders(), adminGetProduct()])
+      .then(([s, orders, product]) => {
+        setStats(s);
+        setRecentOrders(orders.slice(0, 8));
+        setCurrentPrice(product.price);
+        setPriceInput(String(product.price));
+      })
       .catch(() => navigate('/admin/login'))
       .finally(() => setLoading(false));
   }, [navigate]);
+
+  const handleSavePrice = async () => {
+    const price = parseInt(priceInput.replace(/\s/g, ''), 10);
+    if (isNaN(price) || price < 1000) { setPriceError("Kamida 1 000 so'm bo'lishi kerak"); return; }
+    if (price > 10_000_000) { setPriceError("10 000 000 so'mdan oshmasin"); return; }
+    setSavingPrice(true);
+    setPriceError('');
+    try {
+      const updated = await adminUpdateProductPrice(price);
+      setCurrentPrice(updated.price);
+      setPriceInput(String(updated.price));
+      setEditingPrice(false);
+    } catch {
+      setPriceError('Saqlashda xatolik');
+    } finally {
+      setSavingPrice(false);
+    }
+  };
 
   if (loading) return (
     <AdminLayout>
@@ -76,6 +104,68 @@ export default function AdminDashboardPage() {
               <p className="text-xs mt-1" style={{ color: `${accent}99` }}>{sub}</p>
             </div>
           ))}
+        </div>
+
+        {/* Price management */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Tag size={17} className="text-emerald-600" strokeWidth={2} />
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 text-sm">Daftar narxi</p>
+                <p className="text-slate-400 text-xs">Botda va mini appda ko'rinadi</p>
+              </div>
+            </div>
+            {!editingPrice && (
+              <button
+                onClick={() => { setEditingPrice(true); setPriceInput(String(currentPrice)); setPriceError(''); }}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                O'zgartirish
+              </button>
+            )}
+          </div>
+
+          {editingPrice ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={priceInput}
+                  onChange={(e) => { setPriceInput(e.target.value); setPriceError(''); }}
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 font-bold text-lg focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  placeholder="49000"
+                  autoFocus
+                />
+                <span className="text-slate-400 font-medium text-sm">so'm</span>
+              </div>
+              {priceError && <p className="text-red-500 text-xs">{priceError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSavePrice}
+                  disabled={savingPrice}
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-60"
+                >
+                  <Check size={15} strokeWidth={2.5} />
+                  {savingPrice ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+                <button
+                  onClick={() => { setEditingPrice(false); setPriceError(''); }}
+                  className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 text-sm font-semibold px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
+                >
+                  <X size={15} strokeWidth={2.5} />
+                  Bekor
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-3xl font-black text-slate-800">
+              {currentPrice.toLocaleString()}
+              <span className="text-lg font-medium text-slate-400 ml-1.5">so'm</span>
+            </p>
+          )}
         </div>
 
         {/* Quick action cards */}

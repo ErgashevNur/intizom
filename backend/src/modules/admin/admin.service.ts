@@ -6,6 +6,7 @@ import { OrdersService } from '../orders/orders.service';
 import { OrderStatus } from '../orders/entities/order.entity';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ProductsService } from '../products/products.service';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -17,6 +18,7 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly configService: ConfigService,
     private readonly ordersService: OrdersService,
     private readonly notificationsService: NotificationsService,
+    private readonly productsService: ProductsService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -53,5 +55,13 @@ export class AdminService implements OnApplicationBootstrap {
 
   async getStats() {
     return this.ordersService.getStats();
+  }
+
+  async getProduct() {
+    return this.productsService.findMain();
+  }
+
+  async updateProductPrice(price: number) {
+    return this.productsService.updatePrice(price);
   }
 }

@@ -50,4 +50,10 @@ Daftar dunyodagi eng kuchli produktivlik metodlaridan kelib chiqib tuzilgan:
   async incrementSoldCount(id: number, quantity: number) {
     await this.productsRepository.increment({ id }, 'soldCount', quantity);
   }
+
+  async updatePrice(price: number): Promise<Product> {
+    const product = await this.findMain();
+    product.price = price;
+    return this.productsRepository.save(product);
+  }
 }

@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
@@ -54,5 +55,22 @@ export class AdminController {
   @Get('stats')
   async getStats() {
     return this.adminService.getStats();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('product')
+  async getProduct() {
+    return this.adminService.getProduct();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Patch('product/price')
+  async updateProductPrice(@Body('price') price: number) {
+    if (!price || price < 1000 || price > 10_000_000) {
+      throw new BadRequestException('Narx 1 000 dan 10 000 000 gacha bo\'lishi kerak');
+    }
+    return this.adminService.updateProductPrice(price);
   }
 }

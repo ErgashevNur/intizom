@@ -37,3 +37,9 @@ export const adminUpdateOrderStatus = (id: number, data: UpdateOrderStatusPayloa
 
 export const adminGetStats = () =>
   adminApi.get('/admin/stats').then((r) => r.data);
+
+export const adminGetProduct = () =>
+  adminApi.get('/admin/product').then((r) => r.data);
+
+export const adminUpdateProductPrice = (price: number) =>
+  adminApi.patch('/admin/product/price', { price }).then((r) => r.data);

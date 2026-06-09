@@ -5,6 +5,7 @@ import { OrdersService } from '../../orders/orders.service';
 import { UsersService } from '../../users/users.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PromoService } from '../../promo/promo.service';
+import { ProductsService } from '../../products/products.service';
 import { ORDER_WIZARD_ID } from '../telegram.constants';
 import {
   confirmOrderKeyboard,
@@ -14,8 +15,6 @@ import {
   removeKeyboard,
   skipKeyboard,
 } from '../keyboards/keyboards';
-
-const PRICE = 49000;
 
 interface OrderState {
   name?: string;
@@ -45,7 +44,13 @@ export class OrderWizard {
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
     private readonly promoService: PromoService,
+    private readonly productsService: ProductsService,
   ) {}
+
+  private async getPrice(): Promise<number> {
+    const product = await this.productsService.findMain();
+    return product?.price ?? 49000;
+  }
 
   // ─── Step 1: Ism ─────────────────────────────────────────────────
   @WizardStep(1)
@@ -191,7 +196,8 @@ export class OrderWizard {
     const text = ctx.message?.text;
     if (!text || text.startsWith('/')) return;
 
-    const totalBase = PRICE * ctx.wizard.state.quantity;
+    const price = await this.getPrice();
+    const totalBase = price * ctx.wizard.state.quantity;
     const result = await this.promoService.validate(text.trim(), totalBase);
 
     if (!result.valid) {
@@ -226,8 +232,9 @@ export class OrderWizard {
     if (data === 'qty_minus') {
       ctx.wizard.state.quantity = Math.max(1, ctx.wizard.state.quantity - 1);
       await ctx.answerCbQuery();
+      const price = await this.getPrice();
       await ctx.editMessageReplyMarkup(
-        quantityKeyboard(ctx.wizard.state.quantity, PRICE, ctx.wizard.state.discountAmount).reply_markup as any,
+        quantityKeyboard(ctx.wizard.state.quantity, price, ctx.wizard.state.discountAmount).reply_markup as any,
       );
       return;
     }
@@ -235,8 +242,9 @@ export class OrderWizard {
     if (data === 'qty_plus') {
       ctx.wizard.state.quantity = Math.min(10, ctx.wizard.state.quantity + 1);
       await ctx.answerCbQuery();
+      const price = await this.getPrice();
       await ctx.editMessageReplyMarkup(
-        quantityKeyboard(ctx.wizard.state.quantity, PRICE, ctx.wizard.state.discountAmount).reply_markup as any,
+        quantityKeyboard(ctx.wizard.state.quantity, price, ctx.wizard.state.discountAmount).reply_markup as any,
       );
       return;
     }
@@ -261,7 +269,8 @@ export class OrderWizard {
     if (data === 'confirm_order') {
       const s = ctx.wizard.state;
       try {
-        const totalBase = PRICE * s.quantity;
+        const price = await this.getPrice();
+        const totalBase = price * s.quantity;
         const discount = s.promoCode ? s.discountAmount ?? 0 : 0;
 
         const order = await this.ordersService.create({
@@ -301,15 +310,17 @@ export class OrderWizard {
   private async sendQuantityStep(ctx: Ctx_) {
     const qty = ctx.wizard.state.quantity;
     const discount = ctx.wizard.state.discountAmount;
+    const price = await this.getPrice();
     await ctx.replyWithHTML(
       `${step(6)}\n\nNechta daftar kerak?`,
-      quantityKeyboard(qty, PRICE, discount),
+      quantityKeyboard(qty, price, discount),
     );
   }
 
   private async sendSummary(ctx: Ctx_) {
     const s = ctx.wizard.state;
-    const basePrice = s.quantity * PRICE;
+    const price = await this.getPrice();
+    const basePrice = s.quantity * price;
     const discount = s.promoCode ? (s.discountAmount ?? 0) : 0;
     const finalPrice = basePrice - discount;
 
