@@ -45,15 +45,19 @@ export class TelegramUpdate {
   async onStart(@Ctx() ctx: Context) {
     await this.usersService.findOrCreate(ctx.from);
     const name = ctx.from.first_name || 'Mehmon';
-    const product = await this.productsService.findMain();
-    const price = product?.price ?? 49000;
 
     await ctx.replyWithHTML(
-      `Salom, <b>${name}</b>!\n\n` +
-      `📔  <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
-      `Narxi: <b>${price.toLocaleString()} so'm</b>\n` +
-      `Yetkazish: Butun O'zbekiston\n` +
-      `To'lov: Naqd, yetkazib berganda`,
+      `Salom, <b>${name}</b>! 👋\n\n` +
+      `📔 <b>INTIZOM Daftar</b> — maqsadga erishish uchun yaratilgan tizimli daftar\n\n` +
+      `<b>Bir oyda nima o'zgaradi:</b>\n` +
+      `✅ Aniq oylik maqsad — nimaga intilayotganingizni bilasiz\n` +
+      `✅ Haftalik rejalashtirish — haftani yo'nalish bilan boshlaysiz\n` +
+      `✅ Kunlik eng muhim 3 vazifa — fokusda qolasiz\n` +
+      `✅ Odat trekeri — 30 kunlik odatlarni kuzatasiz\n` +
+      `✅ Vaqt bloklash — energiyangizni to'g'ri sarflaysiz\n` +
+      `✅ Oy oxiri tahlil — natijalarni ko'rasiz va o'sasiz\n\n` +
+      `<i>Atomic Habits · Start With Why · Eisenhower matritsasi asosida</i>\n\n` +
+      `❝ Intizom — bu kayfiyatga qarab emas, qarorga qarab yashash. ❞`,
       mainKeyboard(this.miniAppUrl),
     );
   }
@@ -66,20 +70,28 @@ export class TelegramUpdate {
   @Action('about')
   async onAbout(@Ctx() ctx: Context) {
     await ctx.answerCbQuery();
+    const product = await this.productsService.findMain();
+    const price = product?.price ?? 49000;
+
     await ctx.editMessageText(
-      `📔  <b>INTIZOM daftar</b>\n\n` +
-      `Dunyodagi eng kuchli produktivlik metodlari asosida tuzilgan:\n\n` +
-      `  · Atomic Habits — odat shakllantirish\n` +
-      `  · Start With Why — maqsad sababi\n` +
-      `  · Eyzenxauer matritsasi — kunlik tartib\n` +
-      `  · Hayot sohalari balansi\n\n` +
-      `Bir oyda nima o'zgaradi:\n` +
-      `  ✓ Aniq oylik maqsad\n` +
-      `  ✓ Kundalik reja va eng muhim ish\n` +
-      `  ✓ Odat trekeri\n` +
-      `  ✓ G'oyalar daftari\n` +
-      `  ✓ Oy oxiri natija tahlili\n\n` +
-      `<b>49 000 so'm</b>  ·  Naqd, yetkazib berganda`,
+      `📔 <b>INTIZOM Daftar — batafsil</b>\n\n` +
+      `<b>Daftar ichida nima bor:</b>\n` +
+      `  · Oylik maqsad va motivatsiya sahifasi\n` +
+      `  · Haftalik reja (4 hafta)\n` +
+      `  · Kundalik eng muhim 3 vazifa\n` +
+      `  · Eisenhower matritsasi (muhim/shoshilinch)\n` +
+      `  · 30 kunlik odat trekeri\n` +
+      `  · Vaqt bloklash jadvali\n` +
+      `  · G'oyalar va eslatmalar sahifasi\n` +
+      `  · Oy oxiri natija tahlili\n\n` +
+      `<b>Qaysi metodlar asosida:</b>\n` +
+      `  · <i>Atomic Habits</i> — odat shakllantirish tizimi\n` +
+      `  · <i>Start With Why</i> — maqsad sababini topish\n` +
+      `  · <i>Eisenhower matritsasi</i> — vaqtni boshqarish\n` +
+      `  · <i>Hayot sohalari balansi</i> — umumiy uyg'unlik\n\n` +
+      `💰 Narxi: <b>${price.toLocaleString()} so'm</b>\n` +
+      `🚚 Yetkazish: Butun O'zbekiston bo'ylab\n` +
+      `💵 To'lov: Naqd pul, yetkazib berganda`,
       { parse_mode: 'HTML', reply_markup: aboutKeyboard().reply_markup },
     );
   }
@@ -88,8 +100,10 @@ export class TelegramUpdate {
   async onBackMain(@Ctx() ctx: Context) {
     await ctx.answerCbQuery();
     await ctx.editMessageText(
-      `📔  <b>INTIZOM</b> — maqsadga erishish uchun tizimli daftar\n\n` +
-      `Narxi: <b>49 000 so'm</b>  ·  Naqd, yetkazib berganda`,
+      `📔 <b>INTIZOM Daftar</b> — maqsadga erishish uchun yaratilgan tizimli daftar\n\n` +
+      `✅ Oylik maqsad  ·  ✅ Kunlik reja  ·  ✅ Odat trekeri\n\n` +
+      `<i>Atomic Habits · Start With Why · Eisenhower matritsasi asosida</i>\n\n` +
+      `❝ Intizom — bu kayfiyatga qarab emas, qarorga qarab yashash. ❞`,
       { parse_mode: 'HTML', reply_markup: mainKeyboard(this.miniAppUrl).reply_markup },
     );
   }
