@@ -17,9 +17,9 @@ export class CreateOrderDto {
   @IsString()
   region: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
   @IsNumber()
   @Min(1)

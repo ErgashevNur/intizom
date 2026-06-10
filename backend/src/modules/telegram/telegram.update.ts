@@ -132,7 +132,7 @@ export class TelegramUpdate {
       await ctx.replyWithHTML(
         `<b>${o.orderNumber}</b>\n` +
         `${o.customerName}  ·  ${o.customerPhone}\n` +
-        `${o.region}, ${o.address}\n` +
+        `${o.region}\n` +
         `${o.quantity} ta  ·  <b>${o.totalPrice.toLocaleString()} so'm</b>`,
         adminOrderKeyboard(o.id, o.status),
       );

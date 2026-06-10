@@ -20,7 +20,6 @@ interface OrderState {
   name?: string;
   phone?: string;
   region?: string;
-  address?: string;
   quantity: number;
   promoCode?: string;
   discountAmount?: number;
@@ -34,7 +33,7 @@ type Ctx_ = WizardContext & {
   update: any;
 };
 
-const step = (n: number) => `<b>Buyurtma berish</b>  ·  ${n} / 6`;
+const step = (n: number) => `<b>Buyurtma berish</b>  ·  ${n} / 5`;
 
 @Injectable()
 @Wizard(ORDER_WIZARD_ID)
@@ -153,22 +152,8 @@ export class OrderWizard {
     await ctx.answerCbQuery();
 
     await ctx.replyWithHTML(
-      `${step(4)}\n\n<b>${region}</b> tanlandi.\n\nAniq manzilingizni yozing:\n<i>Ko'cha, uy raqami, mo'ljal</i>`,
-    );
-    ctx.wizard.next();
-  }
-
-  // ─── Step 5: Manzil ──────────────────────────────────────────────
-  @WizardStep(5)
-  async onAddress(@Ctx() ctx: Ctx_) {
-    const text = ctx.message?.text;
-    if (!text || text.startsWith('/')) return;
-    if (text.trim().length < 3) { await ctx.reply('Aniqroq manzil kiriting:'); return; }
-
-    ctx.wizard.state.address = text.trim();
-
-    await ctx.replyWithHTML(
-      `${step(5)}\n\n🎟 Promokodingiz bormi?\n\n` +
+      `${step(4)}\n\n<b>${region}</b> tanlandi.\n\n` +
+      `🎟 Promokodingiz bormi?\n\n` +
       `Agar promokod bo'lsa — yozing.\n` +
       `Yo'q bo'lsa — pastdagi tugmani bosing.`,
       skipKeyboard('O\'tkazib yuborish →'),
@@ -176,8 +161,8 @@ export class OrderWizard {
     ctx.wizard.next();
   }
 
-  // ─── Step 6: Promokod ────────────────────────────────────────────
-  @WizardStep(6)
+  // ─── Step 5: Promokod ────────────────────────────────────────────
+  @WizardStep(5)
   async onPromo(@Ctx() ctx: Ctx_) {
     const cbData = ctx.update?.callback_query?.data;
 
@@ -221,8 +206,8 @@ export class OrderWizard {
     ctx.wizard.next();
   }
 
-  // ─── Step 7: Miqdor va tasdiqlash ────────────────────────────────
-  @WizardStep(7)
+  // ─── Step 6: Miqdor va tasdiqlash ────────────────────────────────
+  @WizardStep(6)
   async onQuantity(@Ctx() ctx: Ctx_) {
     const data = ctx.update?.callback_query?.data;
     if (!data) return;
@@ -258,8 +243,8 @@ export class OrderWizard {
     }
   }
 
-  // ─── Step 8: Yakuniy tasdiqlash ───────────────────────────────────
-  @WizardStep(8)
+  // ─── Step 7: Yakuniy tasdiqlash ───────────────────────────────────
+  @WizardStep(7)
   async onConfirm(@Ctx() ctx: Ctx_) {
     const data = ctx.update?.callback_query?.data;
     await ctx.answerCbQuery();
@@ -278,7 +263,6 @@ export class OrderWizard {
           customerName: s.name,
           customerPhone: s.phone,
           region: s.region,
-          address: s.address,
           quantity: s.quantity,
           promoCode: s.promoCode,
           discountAmount: discount > 0 ? discount : undefined,
@@ -312,7 +296,7 @@ export class OrderWizard {
     const discount = ctx.wizard.state.discountAmount;
     const price = await this.getPrice();
     await ctx.replyWithHTML(
-      `${step(6)}\n\nNechta daftar kerak?`,
+      `${step(5)}\n\nNechta daftar kerak?`,
       quantityKeyboard(qty, price, discount),
     );
   }
@@ -332,7 +316,6 @@ export class OrderWizard {
       `Ism: ${s.name}\n` +
       `Tel: ${s.phone}\n` +
       `Viloyat: ${s.region}\n` +
-      `Manzil: ${s.address}\n` +
       `Miqdor: ${s.quantity} ta\n` +
       `Narx: ${basePrice.toLocaleString()} so'm` +
       promoLine + `\n` +

@@ -43,7 +43,7 @@ export class Order {
   @Column()
   region: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   address: string;
 
   @Column({ default: 1 })
